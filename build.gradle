@@ -1,19 +1,49 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
 plugins {
-    id 'java'
+    id "java"
+    id "application"
+    id("com.github.johnrengelman.shadow") version "7.1.2"
 }
 
-group = 'com.lukeramsden'
-version = '1.0-SNAPSHOT'
+group = "com.lukeramsden"
+version = "1.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
 }
 
+var vertxVersion = "4.4.4"
+var junitJupiterVersion = "5.9.1"
+
 dependencies {
-    testImplementation platform('org.junit:junit-bom:5.9.1')
-    testImplementation 'org.junit.jupiter:junit-jupiter'
+    implementation("org.agrona:agrona:1.19.0")
+    implementation(platform("io.vertx:vertx-stack-depchain:$vertxVersion"))
+    implementation("io.vertx:vertx-web")
+
+    testImplementation("org.assertj:assertj-core:3.24.2")
+    testImplementation("io.vertx:vertx-junit5")
+    testImplementation("org.junit.jupiter:junit-jupiter:$junitJupiterVersion")
 }
 
 test {
     useJUnitPlatform()
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+tasks.withType(ShadowJar).configureEach {
+    archiveClassifier.set("fat")
+    manifest {}
+    mergeServiceFiles()
+}
+
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
+    testLogging {
+        events "PASSED", "SKIPPED", "FAILED", "STANDARD_OUT", "STANDARD_ERROR"
+    }
 }
