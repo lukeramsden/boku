@@ -30,4 +30,11 @@ public class UserAccountBalanceIntegrationTest
         dsl.when().sendsRequest(fixtures.user("user2").queriesBalance());
         dsl.then().receivesResponse(fixtures.user("user2").expectedBalanceQueryResponse(200));
     }
+
+    @Test
+    void shouldReturnErrorForNonExistentUser()
+    {
+        dsl.when().sendsRequest(fixtures.user("userDoesNotExist!!").queriesBalance());
+        dsl.then().receivesResponse(fixtures.user("user1").expectedUserNotFoundResponse());
+    }
 }

@@ -56,6 +56,15 @@ public class UserAccountFixtures
                             .put("balance", String.valueOf(expectedBalance))
             );
         }
+
+        public IntegrationDsl.IntegrationDslApi.ExpectedResponse expectedUserNotFoundResponse()
+        {
+            return new JsonExpectedResponse(
+                    404,
+                    new JsonObject()
+                            .put("err", "User not found")
+            );
+        }
     }
 
 }
