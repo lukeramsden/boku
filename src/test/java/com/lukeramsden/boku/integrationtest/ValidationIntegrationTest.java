@@ -5,8 +5,6 @@ import com.lukeramsden.boku.integrationtest.support.IntegrationDsl;
 import com.lukeramsden.boku.integrationtest.support.IntegrationDsl.IntegrationDslApi.RequestToSend;
 import com.lukeramsden.boku.integrationtest.support.JsonExpectedResponse;
 import io.vertx.core.json.JsonObject;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;

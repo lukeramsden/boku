@@ -4,8 +4,6 @@ import io.vertx.core.Future;
 import org.agrona.concurrent.Agent;
 import org.agrona.concurrent.ManyToOneConcurrentArrayQueue;
 
-import java.util.function.Function;
-
 public abstract class AgentService implements Agent
 {
     private final ManyToOneConcurrentArrayQueue<Runnable> tasks = new ManyToOneConcurrentArrayQueue<>(128);
