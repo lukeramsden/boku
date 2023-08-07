@@ -19,7 +19,7 @@ var vertxVersion = "4.4.4"
 
 dependencies {
     implementation("io.vertx:vertx-web")
-    implementation("org.agrona:agrona:1.19.0")
+    implementation("org.agrona:agrona:1.18.0")
     implementation("org.apache.logging.log4j:log4j-api:$log4jVersion")
     implementation("org.apache.logging.log4j:log4j-core:$log4jVersion")
     implementation(platform("io.vertx:vertx-stack-depchain:$vertxVersion"))
