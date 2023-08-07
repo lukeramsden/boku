@@ -47,6 +47,10 @@ tasks.register("integrationTest", Test) {
     // requires a lot more plumbing for no gain in this project
     maxParallelForks 1
 
+    afterTest { desc, result ->
+        logger.quiet "${desc.className},${desc.name},${result.resultType},${(result.endTime - result.startTime) / 1000}s"
+    }
+
     outputs.upToDateWhen { return false }
 }
 
