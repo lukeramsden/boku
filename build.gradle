@@ -42,6 +42,11 @@ tasks.register("unitTest", Test) {
 
 tasks.register("integrationTest", Test) {
     include "**/*IntegrationTest.class"
+
+    // we could make the integration tests run in parallel but it
+    // requires a lot more plumbing for no gain in this project
+    maxParallelForks 1
+
     outputs.upToDateWhen { return false }
 }
 
