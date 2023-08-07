@@ -1,6 +1,6 @@
 package com.lukeramsden.boku.integrationtest;
 
-import com.lukeramsden.boku.integrationtest.fixtures.IntegrationTestFixtures;
+import com.lukeramsden.boku.integrationtest.fixtures.HealthCheckTestFixtures;
 import com.lukeramsden.boku.integrationtest.support.IntegrationDsl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -9,7 +9,7 @@ public class HealthCheckIntegrationTest
 {
     @RegisterExtension
     IntegrationDsl dsl = IntegrationDsl.newDsl();
-    IntegrationTestFixtures fixtures = new IntegrationTestFixtures();
+    HealthCheckTestFixtures fixtures = new HealthCheckTestFixtures();
 
     @Test
     void shouldRespondToHealthcheck()
