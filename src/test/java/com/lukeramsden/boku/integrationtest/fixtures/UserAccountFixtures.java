@@ -32,6 +32,48 @@ public class UserAccountFixtures
         {
             return new NoContentExpectedResponse();
         }
+
+        public IntegrationDsl.IntegrationDslApi.RequestToSend invalidSetUserBalanceRequestMissingUsername()
+        {
+            return new JsonRequestToSend(
+                    "POST",
+                    "/admin/setUserBalance",
+                    new JsonObject()
+                            .put("balance", String.valueOf(100))
+            );
+        }
+
+        public IntegrationDsl.IntegrationDslApi.RequestToSend invalidSetUserBalanceRequestMissingBalance()
+        {
+            return new JsonRequestToSend(
+                    "POST",
+                    "/admin/setUserBalance",
+                    new JsonObject()
+                            .put("username", "user1")
+            );
+        }
+
+        public IntegrationDsl.IntegrationDslApi.RequestToSend invalidSetUserBalanceRequestBalanceBelowZero()
+        {
+            return new JsonRequestToSend(
+                    "POST",
+                    "/admin/setUserBalance",
+                    new JsonObject()
+                            .put("username", "user1")
+                            .put("balance", String.valueOf(-1))
+            );
+        }
+
+        public IntegrationDsl.IntegrationDslApi.RequestToSend invalidSetUserBalanceRequestBalanceNaN()
+        {
+            return new JsonRequestToSend(
+                    "POST",
+                    "/admin/setUserBalance",
+                    new JsonObject()
+                            .put("username", "user1")
+                            .put("balance", "abc")
+            );
+        }
     }
 
     public static class UserAccountUserFixtures
