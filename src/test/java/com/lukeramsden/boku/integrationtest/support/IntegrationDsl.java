@@ -11,7 +11,6 @@ import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
-import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -184,13 +183,7 @@ public final class IntegrationDsl implements BeforeEachCallback, AfterEachCallba
             {
                 final HttpResponse<String> nextResponse = responses.get(responseAssertionWatermark);
 
-                softAssertions.assertThat(nextResponse.statusCode()).isEqualTo(expectedResponse.expectedStatusCode());
-                softAssertions.assertThat(nextResponse.body()).isEqualTo(expectedResponse.expectedBody());
-
-                final Map<String, List<String>> headers = new HashMap<>(nextResponse.headers().map());
-                headers.remove(":status"); // don't assert on this header
-                headers.remove("content-length"); // don't assert on this header
-                softAssertions.assertThat(headers).usingRecursiveAssertion().isEqualTo(expectedResponse.expectedHeaders());
+                assertThatResponseIsEqual(softAssertions, nextResponse, expectedResponse);
 
                 responseAssertionWatermark++;
             } catch (final IndexOutOfBoundsException ignored)
@@ -199,6 +192,24 @@ public final class IntegrationDsl implements BeforeEachCallback, AfterEachCallba
             }
 
             softAssertions.assertAll();
+        }
+
+        private static void assertThatResponseIsEqual(SoftAssertions softAssertions, HttpResponse<String> nextResponse, ExpectedResponse expectedResponse)
+        {
+            softAssertions.assertThat(nextResponse.statusCode()).isEqualTo(expectedResponse.expectedStatusCode());
+
+            if (expectedResponse.expectedBody() == null)
+            {
+                softAssertions.assertThat(nextResponse.body()).isEmpty();
+            } else
+            {
+                softAssertions.assertThat(nextResponse.body()).isEqualTo(expectedResponse.expectedBody());
+            }
+
+            final Map<String, List<String>> headers = new HashMap<>(nextResponse.headers().map());
+            headers.remove(":status"); // don't assert on this header
+            headers.remove("content-length"); // don't assert on this header
+            softAssertions.assertThat(headers).usingRecursiveAssertion().isEqualTo(expectedResponse.expectedHeaders());
         }
     }
 }

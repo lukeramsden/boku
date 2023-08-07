@@ -24,7 +24,7 @@ public interface WithdrawalService {
         PROCESSING, COMPLETED, FAILED
     }
 
-    record Amount(long scale, int exponent) {}
+    record Amount(long mantissa, int exponent) {}
     record WithdrawalId(UUID value) {}
     record Address(String value) {}
 }

@@ -12,15 +12,11 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 class HttpApiService extends AbstractVerticle
 {
-    private final WithdrawalService withdrawalService;
-    private final AccountStoreService accountStoreService;
     private final HttpApiServiceVerticle verticle;
 
     public HttpApiService(Vertx vertx, WithdrawalService withdrawalService, AccountStoreService accountStoreService)
     {
-        this.withdrawalService = withdrawalService;
-        this.accountStoreService = accountStoreService;
-        this.verticle = new HttpApiServiceVerticle();
+        this.verticle = new HttpApiServiceVerticle(accountStoreService, withdrawalService);
 
         deployVerticle(vertx);
     }

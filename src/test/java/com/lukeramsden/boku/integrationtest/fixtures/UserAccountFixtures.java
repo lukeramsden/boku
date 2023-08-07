@@ -24,7 +24,7 @@ public class UserAccountFixtures
                     "/admin/setUserBalance",
                     new JsonObject()
                             .put("username", username)
-                            .put("balance", balanceToSetTo)
+                            .put("balance", String.valueOf(balanceToSetTo))
             );
         }
 
@@ -53,7 +53,7 @@ public class UserAccountFixtures
             return new JsonExpectedResponse(
                     200,
                     new JsonObject()
-                            .put("balance", expectedBalance)
+                            .put("balance", String.valueOf(expectedBalance))
             );
         }
     }
