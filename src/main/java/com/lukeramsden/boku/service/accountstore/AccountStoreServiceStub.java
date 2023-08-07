@@ -13,8 +13,8 @@ import java.util.Map;
  * AccountStoreServiceStub runs as an agent with a thread-safe public API
  * that queues on to an internal array-backed concurrent queue.
  * <p>
- * This allows the business logic to be single-threaded and to maintain
- * thread cache locality.
+ * This allows the business logic to be single-threaded, which is much simpler
+ * (and faster) than managing synchronisation amongst business logic.
  * <p>
  * In a more advanced message-based system that crossed processes (such
  * as one built using Aeron), this would allow us to take advantage of
