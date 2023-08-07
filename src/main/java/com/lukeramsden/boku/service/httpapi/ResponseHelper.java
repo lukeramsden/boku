@@ -1,12 +1,17 @@
 package com.lukeramsden.boku.service.httpapi;
 
-import com.lukeramsden.boku.service.accountstore.AccountStoreServiceException;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import java.util.function.Function;
 
 final class ResponseHelper
 {
+    private static final Logger LOGGER = LogManager.getLogger();
+
     private ResponseHelper()
     {
     }
@@ -14,21 +19,25 @@ final class ResponseHelper
     public static Handler<Throwable> errorMatcher(
             RoutingContext context,
             String internalServerErrorMsg,
-            ErrorMatcherRow... rows
+            ErrorMatcherRow<?>... rows
     )
     {
         return throwable ->
         {
-            for (ErrorMatcherRow row : rows)
+            for (ErrorMatcherRow<?> row : rows)
             {
-                if (row.clazz.isAssignableFrom(throwable.getClass()))
+                if (!row.clazz.isAssignableFrom(throwable.getClass()))
                 {
-                    errResponse(context, row.responseStatusCode, row.responseMessage);
-                    return;
+                    continue;
                 }
 
-                errResponse(context, 500, internalServerErrorMsg);
+                final String errMsg = row.responseMessage.apply(row.clazz.cast(throwable));
+                errResponse(context, row.responseStatusCode, errMsg);
+                return;
             }
+
+            LOGGER.error("Unhandled internal server error", throwable);
+            errResponse(context, 500, internalServerErrorMsg);
         };
     }
 
@@ -53,16 +62,16 @@ final class ResponseHelper
         return context -> context.response().setStatusCode(500).end();
     }
 
-    public static final class ErrorMatcherRow
+    public static final class ErrorMatcherRow<T extends Throwable>
     {
-        private final Class<? extends AccountStoreServiceException> clazz;
+        private final Class<T> clazz;
         private final int responseStatusCode;
-        private final String responseMessage;
+        private final Function<Throwable, String> responseMessage;
 
         private ErrorMatcherRow(
-                Class<? extends AccountStoreServiceException> clazz,
+                Class<T> clazz,
                 int responseStatusCode,
-                String responseMessage
+                Function<Throwable, String> responseMessage
         )
         {
             this.clazz = clazz;
@@ -70,13 +79,28 @@ final class ResponseHelper
             this.responseMessage = responseMessage;
         }
 
-        public static ErrorMatcherRow matchError(
-                Class<? extends AccountStoreServiceException> clazz,
+        public static <T extends Throwable> ErrorMatcherRow<T> matchError(
+                Class<T> clazz,
                 int responseStatusCode,
                 String responseMessage
         )
         {
-            return new ErrorMatcherRow(clazz, responseStatusCode, responseMessage);
+            return new ErrorMatcherRow<>(clazz, responseStatusCode, __ -> responseMessage);
+        }
+
+        public static <T extends Throwable> ErrorMatcherRow<T> matchError(
+                Class<T> clazz,
+                int responseStatusCode,
+                ResponseMessageSupplier<T> responseMessage
+        )
+        {
+            return new ErrorMatcherRow<>(clazz, responseStatusCode, err ->
+                    responseMessage.apply(clazz.cast(err)));
+        }
+
+        public interface ResponseMessageSupplier<T extends Throwable>
+        {
+            String apply(T throwable);
         }
     }
 }

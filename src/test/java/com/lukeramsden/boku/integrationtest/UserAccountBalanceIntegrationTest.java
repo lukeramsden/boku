@@ -35,6 +35,6 @@ public class UserAccountBalanceIntegrationTest
     void shouldReturnErrorForNonExistentUser()
     {
         dsl.when().sendsRequest(fixtures.user("userDoesNotExist!!").queriesBalance());
-        dsl.then().receivesResponse(fixtures.user("user1").expectedUserNotFoundResponse());
+        dsl.then().receivesResponse(fixtures.user("userDoesNotExist!!").expectedUserNotFoundResponse());
     }
 }

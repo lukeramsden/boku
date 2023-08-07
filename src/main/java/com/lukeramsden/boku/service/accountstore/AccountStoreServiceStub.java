@@ -8,7 +8,6 @@ import org.agrona.collections.ObjectHashSet;
 
 import java.math.BigDecimal;
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * AccountStoreServiceStub runs as an agent with a thread-safe public API
@@ -30,7 +29,7 @@ class AccountStoreServiceStub extends AgentService implements AccountStoreServic
     {
         return task(() ->
         {
-            if (balance.compareTo(new BigDecimal(0)) < 0)
+            if (balance.compareTo(BigDecimal.ZERO) < 0)
             {
                 throw new AccountStoreServiceException.BalanceCannotBeBelowZeroException();
             }
@@ -41,25 +40,59 @@ class AccountStoreServiceStub extends AgentService implements AccountStoreServic
     }
 
     @Override
-    public Future<Optional<BigDecimal>> getUserBalance(String username)
+    public Future<BigDecimal> getUserBalance(String username)
     {
         return task(() ->
         {
             if (!userBalances.containsKey(username))
             {
-                return Optional.empty();
+                throw new AccountStoreServiceException.UserDoesNotExistException(username);
             }
 
-            return Optional.of(userBalances.get(username));
+            return userBalances.get(username);
         });
     }
 
     @Override
-    public Future<Void> transferAmountFromTo(String from, String to, BigDecimal amount)
+    public Future<Void> transferAmountFromTo(String from, String to, BigDecimal amountToTransfer)
     {
         return task(() ->
         {
-            throw new AccountStoreServiceException.BalanceCannotBeBelowZeroException();
+            if (!userBalances.containsKey(from))
+            {
+                throw new AccountStoreServiceException.UserDoesNotExistException(from);
+            }
+
+            if (!userBalances.containsKey(to))
+            {
+                throw new AccountStoreServiceException.UserDoesNotExistException(to);
+            }
+
+            if (amountToTransfer.compareTo(BigDecimal.ZERO) < 0)
+            {
+                throw new AccountStoreServiceException.BalanceCannotBeBelowZeroException();
+            }
+
+            final BigDecimal fromBalance = userBalances.get(from);
+            final BigDecimal toBalance = userBalances.get(to);
+
+            if (fromBalance.compareTo(amountToTransfer) < 0)
+            {
+                throw new AccountStoreServiceException.InsufficientBalanceException();
+            }
+
+            try
+            {
+                userBalances.put(from, fromBalance.subtract(amountToTransfer));
+                userBalances.put(to, toBalance.add(amountToTransfer));
+
+                return null;
+            } catch (Exception e)
+            {
+                userBalances.put(from, fromBalance);
+                userBalances.put(to, toBalance);
+                throw e;
+            }
         });
     }
 }

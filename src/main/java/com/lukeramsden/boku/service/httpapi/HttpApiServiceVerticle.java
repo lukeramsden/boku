@@ -65,20 +65,20 @@ class HttpApiServiceVerticle extends AbstractVerticle
                     .getUserBalance(username)
                     .onSuccess(balance ->
                     {
-                        balance.ifPresentOrElse(bigDecimal ->
-                        {
-                            context.response().setStatusCode(200);
-                            context.json(new JsonObject().put("balance", bigDecimal.toString()));
-                        }, () ->
-                        {
-                            // there are many arguments to be had
-                            // about how to return errors for missing entities
-                            // / resources
-                            // that argument is out of scope of this take-home task
-                            errResponse(context, 404, "User not found");
-                        });
+                        context.response().setStatusCode(200);
+                        context.json(new JsonObject().put("balance", balance.toString()));
                     })
-                    .onFailure(err -> errResponse(context, 500, "Error while retrieving user balance"));
+                    .onFailure(errorMatcher(
+                            context, "Error while retrieving user balance",
+                            matchError(
+                                    // there are many arguments to be had
+                                    // about how to return errors for missing entities
+                                    // / resources
+                                    // that argument is out of scope of this take-home task
+                                    AccountStoreServiceException.UserDoesNotExistException.class,
+                                    404, err -> "User not found: '%s'".formatted(err.username())
+                            )
+                    ));
         }).failureHandler(internalServerError());
     }
 
@@ -167,8 +167,15 @@ class HttpApiServiceVerticle extends AbstractVerticle
                                     .transferAmountFromTo(body.getString("from"), body.getString("to"), amount)
                                     .onSuccess(noContentResponse(context))
                                     .onFailure(errorMatcher(
-                                            context,
-                                            "Error while performing transfer",
+                                            context, "Error while performing transfer",
+                                            matchError(
+                                                    // there are many arguments to be had
+                                                    // about how to return errors for missing entities
+                                                    // / resources
+                                                    // that argument is out of scope of this take-home task
+                                                    AccountStoreServiceException.UserDoesNotExistException.class,
+                                                    404, err -> "User not found: '%s'".formatted(err.username())
+                                            ),
                                             matchError(
                                                     AccountStoreServiceException.BalanceCannotBeBelowZeroException.class,
                                                     400, "Cannot set field 'balance' to a value below zero"

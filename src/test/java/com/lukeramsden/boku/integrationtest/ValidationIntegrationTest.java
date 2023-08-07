@@ -35,6 +35,10 @@ public class ValidationIntegrationTest
                 Arguments.arguments(userAccountFixtures.admin().invalidSetUserBalanceRequestMissingBalance(), "Missing field 'balance'"),
                 Arguments.arguments(userAccountFixtures.admin().invalidSetUserBalanceRequestBalanceBelowZero(), "Cannot set field 'balance' to a value below zero"),
                 Arguments.arguments(userAccountFixtures.admin().invalidSetUserBalanceRequestBalanceNaN(), "Could not parse field 'balance' as a number")
+//                ,Arguments.arguments(userAccountFixtures.user("user1").invalidTransferMissingFrom(), "Missing field 'from'"),
+//                Arguments.arguments(userAccountFixtures.user("user1").invalidTransferMissingTo(), "Missing field 'to'"),
+//                Arguments.arguments(userAccountFixtures.user("user1").invalidTransferBalanceBelowZero(), "Cannot set field 'balance' to a value below zero"),
+//                Arguments.arguments(userAccountFixtures.user("user1").invalidTransferBalanceNaN(), "Could not parse field 'balance' as a number")
         );
     }
 }

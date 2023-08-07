@@ -46,4 +46,18 @@ public class UserAccountTransferIntegrationTest
         dsl.when().sendsRequest(fixtures.user("user2").queriesBalance());
         dsl.then().receivesResponse(fixtures.user("user2").expectedBalanceQueryResponse(200));
     }
+
+    @Test
+    void shouldRejectRequestWhenFromUserDoesNotExist()
+    {
+        dsl.when().sendsRequest(fixtures.user("userDoesNotExist").sendsMoneyTo("user2", 10));
+        dsl.then().receivesResponse(fixtures.user("userDoesNotExist").expectedUserNotFoundResponse());
+    }
+
+    @Test
+    void shouldRejectRequestWhenToUserDoesNotExist()
+    {
+        dsl.when().sendsRequest(fixtures.user("user1").sendsMoneyTo("userDoesNotExist", 10));
+        dsl.then().receivesResponse(fixtures.user("userDoesNotExist").expectedUserNotFoundResponse());
+    }
 }

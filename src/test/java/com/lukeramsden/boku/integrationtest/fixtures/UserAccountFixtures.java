@@ -104,7 +104,7 @@ public class UserAccountFixtures
             return new JsonExpectedResponse(
                     404,
                     new JsonObject()
-                            .put("err", "User not found")
+                            .put("err", "User not found: '%s'".formatted(username))
             );
         }
 
@@ -130,7 +130,7 @@ public class UserAccountFixtures
             return new JsonExpectedResponse(
                     422,
                     new JsonObject()
-                            .put("err", "Not enough money in balance")
+                            .put("err", "User does not have sufficient balance for this transfer")
             );
         }
     }
