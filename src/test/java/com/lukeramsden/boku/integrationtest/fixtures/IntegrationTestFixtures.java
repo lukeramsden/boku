@@ -10,7 +10,7 @@ public class IntegrationTestFixtures
 {
     public RequestToSend healthCheckRequest()
     {
-        return null;
+        return new EmptyBodyRequestToSend("GET", "/healthz");
     }
 
     public ExpectedResponse expectedHealthCheckResponse()
@@ -36,6 +36,21 @@ public class IntegrationTestFixtures
         public Map<String, List<String>> expectedHeaders()
         {
             return Map.of("content-type", List.of("text/plain"));
+        }
+    }
+
+    private record EmptyBodyRequestToSend(String method, String path) implements RequestToSend
+    {
+        @Override
+        public byte[] body()
+        {
+            return new byte[0];
+        }
+
+        @Override
+        public String contentType()
+        {
+            return null;
         }
     }
 }

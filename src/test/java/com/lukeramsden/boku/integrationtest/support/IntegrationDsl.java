@@ -82,6 +82,13 @@ public final class IntegrationDsl implements BeforeEachCallback, AfterEachCallba
 
         interface RequestToSend
         {
+            String method();
+
+            String path();
+
+            byte[] body();
+
+            String contentType();
         }
 
         interface ExpectedResponse
@@ -144,12 +151,20 @@ public final class IntegrationDsl implements BeforeEachCallback, AfterEachCallba
         {
             try
             {
+                HttpRequest.Builder httpRequestBuilder = HttpRequest.newBuilder();
+
+                httpRequestBuilder.method(requestToSend.method(), HttpRequest.BodyPublishers.ofByteArray(requestToSend.body()));
+                if (requestToSend.contentType() != null)
+                {
+                    httpRequestBuilder.header("Content-Type", requestToSend.contentType());
+                }
+                httpRequestBuilder.uri(
+                        URI.create("http://localhost:8888/").resolve(requestToSend.path())
+                );
+                httpRequestBuilder.timeout(Duration.ofSeconds(30));
+
                 final HttpResponse<String> response = httpClient.sendAsync(
-                        HttpRequest.newBuilder()
-                                .method("GET", HttpRequest.BodyPublishers.noBody())
-                                .uri(URI.create("http://localhost:8888/").resolve("/healthz"))
-                                .timeout(Duration.ofSeconds(30))
-                                .build(),
+                        httpRequestBuilder.build(),
                         HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8)
                 ).get(30, TimeUnit.SECONDS);
 
