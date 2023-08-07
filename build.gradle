@@ -44,12 +44,17 @@ application {
 
 jar {
     manifest {
-        attributes 'Multi-Release': 'true', 'Main-Class': 'com.lukeramsden.boku.ServiceContainer'
+        attributes 'Multi-Release': 'true',
+                'Main-Class': 'com.lukeramsden.boku.ServiceContainer'
     }
 }
 
 tasks.withType(ShadowJar).configureEach {
     archiveClassifier.set("fat")
+    manifest {
+        attributes 'Multi-Release': 'true',
+                'Main-Class': 'com.lukeramsden.boku.ServiceContainer'
+    }
     mergeServiceFiles()
 }
 

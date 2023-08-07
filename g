@@ -10,4 +10,4 @@ export PATH="$SCRIPTPATH/opt/.bin:$PATH"
 
 "$SCRIPTPATH"/opt/bootstrap.sh
 
-./gradlew "$@" || exit 1
+"$SCRIPTPATH"/gradlew "$@" || exit 1

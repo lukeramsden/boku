@@ -2,7 +2,7 @@ package com.lukeramsden.boku.service.withdrawal;
 
 import java.io.Closeable;
 
-public final class WithdrawalServiceStubLifecycle implements Closeable
+public final class WithdrawalServiceStubLifecycle implements AutoCloseable
 {
     private final WithdrawalServiceStub withdrawalServiceStub;
 

@@ -2,7 +2,7 @@ package com.lukeramsden.boku.service.accountstore;
 
 import java.io.Closeable;
 
-public class AccountStoreServiceStubLifecycle implements Closeable
+public class AccountStoreServiceStubLifecycle implements AutoCloseable
 {
     private final AccountStoreServiceStub accountStoreServiceStub;
 

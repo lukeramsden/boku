@@ -2,20 +2,37 @@ package com.lukeramsden.boku.service.httpapi;
 
 import com.lukeramsden.boku.service.accountstore.AccountStoreService;
 import com.lukeramsden.boku.service.withdrawal.WithdrawalService;
+import io.vertx.core.AbstractVerticle;
+import io.vertx.core.Vertx;
 
-class HttpApiService
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
+
+import static java.util.concurrent.TimeUnit.SECONDS;
+
+class HttpApiService extends AbstractVerticle
 {
     private final WithdrawalService withdrawalService;
     private final AccountStoreService accountStoreService;
+    private final HttpApiServiceVerticle verticle;
 
-    public HttpApiService(WithdrawalService withdrawalService, AccountStoreService accountStoreService)
+    public HttpApiService(Vertx vertx, WithdrawalService withdrawalService, AccountStoreService accountStoreService)
     {
         this.withdrawalService = withdrawalService;
         this.accountStoreService = accountStoreService;
+        this.verticle = new HttpApiServiceVerticle();
+
+        deployVerticle(vertx);
     }
 
-    public void shutdown()
+    private void deployVerticle(Vertx vertx)
     {
-
+        try
+        {
+            vertx.deployVerticle(verticle).toCompletionStage().toCompletableFuture().get(30, SECONDS);
+        } catch (InterruptedException | ExecutionException | TimeoutException e)
+        {
+            throw new RuntimeException(e);
+        }
     }
 }
