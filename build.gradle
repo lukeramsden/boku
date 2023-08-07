@@ -38,9 +38,18 @@ java {
     targetCompatibility = JavaVersion.VERSION_17
 }
 
+application {
+    mainClass = 'com.lukeramsden.boku.ServiceContainer'
+}
+
+jar {
+    manifest {
+        attributes 'Multi-Release': 'true', 'Main-Class': 'com.lukeramsden.boku.ServiceContainer'
+    }
+}
+
 tasks.withType(ShadowJar).configureEach {
     archiveClassifier.set("fat")
-    manifest {}
     mergeServiceFiles()
 }
 

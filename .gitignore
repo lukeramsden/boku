@@ -40,3 +40,7 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+
+### Project ###
+opt/*
+!opt/bootstrap.sh
