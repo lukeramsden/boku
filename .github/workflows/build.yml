@@ -15,12 +15,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
-    
-    - uses: actions/setup-java@v3
-      with:
-        java-version: '17'
-        distribution: 'corretto'
-        cache: 'gradle'
+      - name: Checkout repo
+        uses: actions/checkout@v3
 
-    - run: ./g build --no-daemon
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'corretto'
+          cache: 'gradle'
+
+      - name: Build
+        run: ./g build --no-daemon
+
+      - name: Integration tests
+        run: ./g integrationTest --no-daemon
+
