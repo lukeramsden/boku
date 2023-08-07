@@ -1,10 +1,12 @@
 package com.lukeramsden.boku.service.httpapi;
 
 import com.lukeramsden.boku.service.accountstore.AccountStoreService;
+import com.lukeramsden.boku.service.accountstore.AccountStoreServiceException;
 import com.lukeramsden.boku.service.withdrawal.WithdrawalService;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
+import io.vertx.ext.web.RoutingContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -66,16 +68,14 @@ class HttpApiServiceVerticle extends AbstractVerticle
                             // about how to return errors for missing entities
                             // / resources
                             // that argument is out of scope of this take-home task
-                            context.response().setStatusCode(404);
-                            context.json(new JsonObject().put("err", "User not found"));
+                            errResponse(context, 404, "User not found");
                         });
                     })
                     .onFailure(err ->
                     {
-                        LOGGER.error("Error while retrieving user balance", err);
-                        context.response().setStatusCode(500).end();
+                        errResponse(context, 500, "Error while retrieving user balance");
                     });
-        });
+        }).failureHandler(this::internalServerError);
     }
 
     private void setUserBalanceAsAdminRoute(Router router)
@@ -86,37 +86,63 @@ class HttpApiServiceVerticle extends AbstractVerticle
                     context.request().bodyHandler(bodyHandler ->
                     {
                         final JsonObject body = bodyHandler.toJsonObject();
-                        final String username = body.getString("username");
-                        final String strBalance = body.getString("balance");
 
-                        if (username == null || strBalance == null)
+                        if (!body.containsKey("username"))
                         {
-                            context.response().setStatusCode(400).end();
+                            errResponse(context, 400, "Missing field 'username'");
+                            return;
+                        }
+
+                        if (!body.containsKey("balance"))
+                        {
+                            errResponse(context, 400, "Missing field 'balance'");
                             return;
                         }
 
                         final BigDecimal balance;
                         try
                         {
-                            balance = new BigDecimal(strBalance);
+                            balance = new BigDecimal(body.getString("balance"));
                         } catch (NumberFormatException e)
                         {
-                            context.response().setStatusCode(400).end();
+                            errResponse(context, 400, "Could not parse field 'balance' as a number");
                             return;
                         }
 
                         accountStoreService
-                                .adminSetUserBalance(username, balance)
+                                .adminSetUserBalance(body.getString("username"), balance)
                                 .onSuccess(__ ->
                                 {
                                     context.response().setStatusCode(204).end();
                                 })
                                 .onFailure(err ->
                                 {
-                                    LOGGER.error("Error while setting user balance", err);
-                                    context.response().setStatusCode(500).end();
+                                    if (err instanceof AccountStoreServiceException.BalanceCannotBeBelowZeroException)
+                                    {
+
+                                        errResponse(context, 400, "Cannot set field 'balance' to a value below zero");
+                                        return;
+                                    }
+
+                                    errResponse(context, 500, "Error while setting user balance");
                                 });
                     });
-                });
+                }).failureHandler(this::internalServerError);
+    }
+
+    private static void errResponse(RoutingContext context, final int statusCode, final String errMsg)
+    {
+        context.response().setStatusCode(statusCode);
+        context.json(errJson(errMsg));
+    }
+
+    private static JsonObject errJson(final String err)
+    {
+        return new JsonObject().put("err", err);
+    }
+
+    private void internalServerError(RoutingContext context)
+    {
+        context.response().setStatusCode(500).end();
     }
 }

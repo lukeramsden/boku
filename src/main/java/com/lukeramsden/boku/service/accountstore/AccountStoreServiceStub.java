@@ -28,8 +28,13 @@ class AccountStoreServiceStub extends AgentService implements AccountStoreServic
     @Override
     public Future<Void> adminSetUserBalance(String username, BigDecimal balance)
     {
-        return task(__ ->
+        return task(() ->
         {
+            if (balance.compareTo(new BigDecimal(0)) < 0)
+            {
+                throw new AccountStoreServiceException.BalanceCannotBeBelowZeroException();
+            }
+
             userBalances.put(username, new BigDecimal(balance.unscaledValue(), balance.scale()));
             return null;
         });
@@ -38,7 +43,7 @@ class AccountStoreServiceStub extends AgentService implements AccountStoreServic
     @Override
     public Future<Optional<BigDecimal>> getUserBalance(String username)
     {
-        return task(__ ->
+        return task(() ->
         {
             if (!userBalances.containsKey(username))
             {

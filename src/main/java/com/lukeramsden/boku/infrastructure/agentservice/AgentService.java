@@ -22,19 +22,24 @@ public abstract class AgentService implements Agent
         return "account-store-service-stub";
     }
 
-    protected <T> Future<T> task(final Function<Void, T> task)
+    protected <R> Future<R> task(final Task<R> task)
     {
         return Future.future(fut ->
                 tasks.add(() ->
                 {
                     try
                     {
-                        fut.complete(task.apply(null));
+                        fut.complete(task.run());
                     } catch (Exception e)
                     {
                         fut.fail(e);
                     }
                 })
         );
+    }
+
+    protected interface Task<R>
+    {
+        R run() throws Exception;
     }
 }
