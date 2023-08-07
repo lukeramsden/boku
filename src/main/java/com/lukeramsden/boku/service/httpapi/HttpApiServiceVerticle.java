@@ -33,6 +33,53 @@ class HttpApiServiceVerticle extends AbstractVerticle
             context.response().end("healthy");
         });
 
+        setUserBalanceAsAdminRoute(router);
+        getUserBalanceRoute(router);
+
+        vertx.createHttpServer()
+                .requestHandler(router)
+                .listen(8888)
+                .onSuccess(server ->
+                        LOGGER.info(
+                                "HTTP server started on port " + server.actualPort()
+                        )
+                );
+    }
+
+    private void getUserBalanceRoute(Router router)
+    {
+        router.get("/user/:username/balance").handler(context ->
+        {
+            final String username = context.pathParam("username");
+
+            accountStoreService
+                    .getUserBalance(username)
+                    .onSuccess(balance ->
+                    {
+                        balance.ifPresentOrElse(bigDecimal ->
+                        {
+                            context.response().setStatusCode(200);
+                            context.json(new JsonObject().put("balance", bigDecimal.toString()));
+                        }, () ->
+                        {
+                            // there are many arguments to be had
+                            // about how to return errors for missing entities
+                            // / resources
+                            // that argument is out of scope of this take-home task
+                            context.response().setStatusCode(404);
+                            context.json(new JsonObject().put("err", "User not found"));
+                        });
+                    })
+                    .onFailure(err ->
+                    {
+                        LOGGER.error("Error while retrieving user balance", err);
+                        context.response().setStatusCode(500).end();
+                    });
+        });
+    }
+
+    private void setUserBalanceAsAdminRoute(Router router)
+    {
         router.post("/admin/setUserBalance").consumes("application/json")
                 .handler(context ->
                 {
@@ -71,14 +118,5 @@ class HttpApiServiceVerticle extends AbstractVerticle
                                 });
                     });
                 });
-
-        vertx.createHttpServer()
-                .requestHandler(router)
-                .listen(8888)
-                .onSuccess(server ->
-                        LOGGER.info(
-                                "HTTP server started on port " + server.actualPort()
-                        )
-                );
     }
 }
