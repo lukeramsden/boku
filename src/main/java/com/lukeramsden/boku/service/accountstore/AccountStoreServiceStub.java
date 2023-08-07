@@ -53,4 +53,13 @@ class AccountStoreServiceStub extends AgentService implements AccountStoreServic
             return Optional.of(userBalances.get(username));
         });
     }
+
+    @Override
+    public Future<Void> transferAmountFromTo(String from, String to, BigDecimal amount)
+    {
+        return task(() ->
+        {
+            throw new AccountStoreServiceException.BalanceCannotBeBelowZeroException();
+        });
+    }
 }

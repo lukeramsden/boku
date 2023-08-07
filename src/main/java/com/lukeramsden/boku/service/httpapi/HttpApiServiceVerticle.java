@@ -6,11 +6,13 @@ import com.lukeramsden.boku.service.withdrawal.WithdrawalService;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
-import io.vertx.ext.web.RoutingContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.math.BigDecimal;
+
+import static com.lukeramsden.boku.service.httpapi.ResponseHelper.ErrorMatcherRow.matchError;
+import static com.lukeramsden.boku.service.httpapi.ResponseHelper.*;
 
 class HttpApiServiceVerticle extends AbstractVerticle
 {
@@ -29,14 +31,10 @@ class HttpApiServiceVerticle extends AbstractVerticle
     {
         Router router = Router.router(vertx);
 
-        router.get("/healthz").handler(context ->
-        {
-            context.response().putHeader("content-type", "text/plain");
-            context.response().end("healthy");
-        });
-
+        healthzRoute(router);
         setUserBalanceAsAdminRoute(router);
         getUserBalanceRoute(router);
+        transferRoute(router);
 
         vertx.createHttpServer()
                 .requestHandler(router)
@@ -46,6 +44,15 @@ class HttpApiServiceVerticle extends AbstractVerticle
                                 "HTTP server started on port " + server.actualPort()
                         )
                 );
+    }
+
+    private void healthzRoute(Router router)
+    {
+        router.get("/healthz").handler(context ->
+        {
+            context.response().putHeader("content-type", "text/plain");
+            context.response().end("healthy");
+        });
     }
 
     private void getUserBalanceRoute(Router router)
@@ -71,78 +78,107 @@ class HttpApiServiceVerticle extends AbstractVerticle
                             errResponse(context, 404, "User not found");
                         });
                     })
-                    .onFailure(err ->
-                    {
-                        errResponse(context, 500, "Error while retrieving user balance");
-                    });
-        }).failureHandler(this::internalServerError);
+                    .onFailure(err -> errResponse(context, 500, "Error while retrieving user balance"));
+        }).failureHandler(internalServerError());
     }
 
     private void setUserBalanceAsAdminRoute(Router router)
     {
         router.post("/admin/setUserBalance").consumes("application/json")
-                .handler(context ->
-                {
-                    context.request().bodyHandler(bodyHandler ->
-                    {
-                        final JsonObject body = bodyHandler.toJsonObject();
-
-                        if (!body.containsKey("username"))
+                .handler(context -> context.request().bodyHandler(
+                        bodyHandler ->
                         {
-                            errResponse(context, 400, "Missing field 'username'");
-                            return;
-                        }
+                            final JsonObject body = bodyHandler.toJsonObject();
 
-                        if (!body.containsKey("balance"))
-                        {
-                            errResponse(context, 400, "Missing field 'balance'");
-                            return;
-                        }
+                            if (!body.containsKey("username"))
+                            {
+                                errResponse(context, 400, "Missing field 'username'");
+                                return;
+                            }
 
-                        final BigDecimal balance;
-                        try
-                        {
-                            balance = new BigDecimal(body.getString("balance"));
-                        } catch (NumberFormatException e)
-                        {
-                            errResponse(context, 400, "Could not parse field 'balance' as a number");
-                            return;
-                        }
+                            if (!body.containsKey("balance"))
+                            {
+                                errResponse(context, 400, "Missing field 'balance'");
+                                return;
+                            }
 
-                        accountStoreService
-                                .adminSetUserBalance(body.getString("username"), balance)
-                                .onSuccess(__ ->
-                                {
-                                    context.response().setStatusCode(204).end();
-                                })
-                                .onFailure(err ->
-                                {
-                                    if (err instanceof AccountStoreServiceException.BalanceCannotBeBelowZeroException)
-                                    {
+                            final BigDecimal balance;
+                            try
+                            {
+                                balance = new BigDecimal(body.getString("balance"));
+                            } catch (NumberFormatException e)
+                            {
+                                errResponse(context, 400, "Could not parse field 'balance' as a number");
+                                return;
+                            }
 
-                                        errResponse(context, 400, "Cannot set field 'balance' to a value below zero");
-                                        return;
-                                    }
-
-                                    errResponse(context, 500, "Error while setting user balance");
-                                });
-                    });
-                }).failureHandler(this::internalServerError);
+                            accountStoreService
+                                    .adminSetUserBalance(body.getString("username"), balance)
+                                    .onSuccess(noContentResponse(context))
+                                    .onFailure(errorMatcher(
+                                            context,
+                                            "Error while setting user balance",
+                                            matchError(
+                                                    AccountStoreServiceException.BalanceCannotBeBelowZeroException.class,
+                                                    400, "Cannot set field 'balance' to a value below zero"
+                                            )
+                                    ));
+                        })
+                ).failureHandler(internalServerError());
     }
 
-    private static void errResponse(RoutingContext context, final int statusCode, final String errMsg)
+    private void transferRoute(Router router)
     {
-        context.response().setStatusCode(statusCode);
-        context.json(errJson(errMsg));
-    }
+        router.post("/transfer").consumes("application/json")
+                .handler(context -> context.request().bodyHandler(
+                        bodyHandler ->
+                        {
+                            final JsonObject body = bodyHandler.toJsonObject();
 
-    private static JsonObject errJson(final String err)
-    {
-        return new JsonObject().put("err", err);
-    }
+                            if (!body.containsKey("from"))
+                            {
+                                errResponse(context, 400, "Missing field 'from'");
+                                return;
+                            }
 
-    private void internalServerError(RoutingContext context)
-    {
-        context.response().setStatusCode(500).end();
+                            if (!body.containsKey("to"))
+                            {
+                                errResponse(context, 400, "Missing field 'to'");
+                                return;
+                            }
+
+                            if (!body.containsKey("amount"))
+                            {
+                                errResponse(context, 400, "Missing field 'amount'");
+                                return;
+                            }
+
+                            final BigDecimal amount;
+                            try
+                            {
+                                amount = new BigDecimal(body.getString("amount"));
+                            } catch (NumberFormatException e)
+                            {
+                                errResponse(context, 400, "Could not parse field 'amount' as a number");
+                                return;
+                            }
+
+                            accountStoreService
+                                    .transferAmountFromTo(body.getString("from"), body.getString("to"), amount)
+                                    .onSuccess(noContentResponse(context))
+                                    .onFailure(errorMatcher(
+                                            context,
+                                            "Error while performing transfer",
+                                            matchError(
+                                                    AccountStoreServiceException.BalanceCannotBeBelowZeroException.class,
+                                                    400, "Cannot set field 'balance' to a value below zero"
+                                            ),
+                                            matchError(
+                                                    AccountStoreServiceException.InsufficientBalanceException.class,
+                                                    422, "User does not have sufficient balance for this transfer"
+                                            )
+                                    ));
+                        })
+                ).failureHandler(internalServerError());
     }
 }

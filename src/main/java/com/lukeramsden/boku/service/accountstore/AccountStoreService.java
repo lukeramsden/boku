@@ -11,4 +11,6 @@ public interface AccountStoreService
     Future<Void> adminSetUserBalance(String username, BigDecimal balance);
 
     Future<Optional<BigDecimal>> getUserBalance(String username);
+
+    Future<Void> transferAmountFromTo(String from, String to, BigDecimal amount);
 }
