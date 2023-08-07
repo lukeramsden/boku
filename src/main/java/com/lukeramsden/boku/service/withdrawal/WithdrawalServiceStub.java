@@ -1,13 +1,11 @@
-package com.lukeramsden.boku;
+package com.lukeramsden.boku.service.withdrawal;
 
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ThreadLocalRandom;
 
-import static com.lukeramsden.boku.WithdrawalService.WithdrawalState.COMPLETED;
-import static com.lukeramsden.boku.WithdrawalService.WithdrawalState.FAILED;
-import static com.lukeramsden.boku.WithdrawalService.WithdrawalState.PROCESSING;
+import static com.lukeramsden.boku.service.withdrawal.WithdrawalService.WithdrawalState.*;
 
 class WithdrawalServiceStub implements WithdrawalService
 {

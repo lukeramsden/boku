@@ -13,16 +13,19 @@ repositories {
     mavenCentral()
 }
 
-var vertxVersion = "4.4.4"
+var log4jVersion = "2.20.0"
 var junitJupiterVersion = "5.9.1"
+var vertxVersion = "4.4.4"
 
 dependencies {
-    implementation("org.agrona:agrona:1.19.0")
-    implementation(platform("io.vertx:vertx-stack-depchain:$vertxVersion"))
     implementation("io.vertx:vertx-web")
+    implementation("org.agrona:agrona:1.19.0")
+    implementation("org.apache.logging.log4j:log4j-api:$log4jVersion")
+    implementation("org.apache.logging.log4j:log4j-core:$log4jVersion")
+    implementation(platform("io.vertx:vertx-stack-depchain:$vertxVersion"))
 
-    testImplementation("org.assertj:assertj-core:3.24.2")
     testImplementation("io.vertx:vertx-junit5")
+    testImplementation("org.assertj:assertj-core:3.24.2")
     testImplementation("org.junit.jupiter:junit-jupiter:$junitJupiterVersion")
 }
 

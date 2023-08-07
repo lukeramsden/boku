@@ -1,8 +1,8 @@
-package com.lukeramsden.boku;
+package com.lukeramsden.boku.service.withdrawal;
 
 import java.util.UUID;
 
-interface WithdrawalService {
+public interface WithdrawalService {
     /**
      * Request a withdrawal for given address and amount. Completes at random moment between 1 and 10 seconds
      * @param id - a caller generated withdrawal id, used for idempotency
