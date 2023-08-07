@@ -19,7 +19,9 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -87,6 +89,8 @@ public final class IntegrationDsl implements BeforeEachCallback, AfterEachCallba
             int expectedStatusCode();
 
             String expectedBody();
+
+            Map<String, List<String>> expectedHeaders();
         }
     }
 
@@ -167,6 +171,11 @@ public final class IntegrationDsl implements BeforeEachCallback, AfterEachCallba
 
                 softAssertions.assertThat(nextResponse.statusCode()).isEqualTo(expectedResponse.expectedStatusCode());
                 softAssertions.assertThat(nextResponse.body()).isEqualTo(expectedResponse.expectedBody());
+
+                final Map<String, List<String>> headers = new HashMap<>(nextResponse.headers().map());
+                headers.remove(":status"); // don't assert on this header
+                headers.remove("content-length"); // don't assert on this header
+                softAssertions.assertThat(headers).usingRecursiveAssertion().isEqualTo(expectedResponse.expectedHeaders());
 
                 responseAssertionWatermark++;
             } catch (final IndexOutOfBoundsException ignored)

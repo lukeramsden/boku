@@ -5,7 +5,7 @@ import com.lukeramsden.boku.integrationtest.support.IntegrationDsl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class HealthzIntegrationTest
+public class HealthCheckIntegrationTest
 {
     @RegisterExtension
     IntegrationDsl dsl = IntegrationDsl.newDsl();
