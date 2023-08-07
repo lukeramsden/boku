@@ -31,6 +31,22 @@ dependencies {
 
 test {
     useJUnitPlatform()
+    exclude "**/*.java"
+}
+
+defaultTasks "unitTest", "shadowJar"
+
+tasks.register("unitTest", Test) {
+    exclude "**/*IntegrationTest.class"
+}
+
+tasks.register("integrationTest", Test) {
+    include "**/*IntegrationTest.class"
+    outputs.upToDateWhen { return false }
+}
+
+tasks.named("build").configure {
+    dependsOn("unitTest")
 }
 
 java {
@@ -39,21 +55,21 @@ java {
 }
 
 application {
-    mainClass = 'com.lukeramsden.boku.ServiceContainer'
+    mainClass = "com.lukeramsden.boku.ServiceContainer"
 }
 
 jar {
     manifest {
-        attributes 'Multi-Release': 'true',
-                'Main-Class': 'com.lukeramsden.boku.ServiceContainer'
+        attributes "Multi-Release": "true",
+                "Main-Class": "com.lukeramsden.boku.ServiceContainer"
     }
 }
 
 tasks.withType(ShadowJar).configureEach {
     archiveClassifier.set("fat")
     manifest {
-        attributes 'Multi-Release': 'true',
-                'Main-Class': 'com.lukeramsden.boku.ServiceContainer'
+        attributes "Multi-Release": "true",
+                "Main-Class": "com.lukeramsden.boku.ServiceContainer"
     }
     mergeServiceFiles()
 }
