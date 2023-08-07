@@ -107,6 +107,32 @@ public class UserAccountFixtures
                             .put("err", "User not found")
             );
         }
+
+        public IntegrationDsl.IntegrationDslApi.RequestToSend sendsMoneyTo(String usernameToSendTo, int amountToSend)
+        {
+            return new JsonRequestToSend(
+                    "POST",
+                    "/transfer",
+                    new JsonObject()
+                            .put("from", username)
+                            .put("to", usernameToSendTo)
+                            .put("amount", String.valueOf(amountToSend))
+            );
+        }
+
+        public IntegrationDsl.IntegrationDslApi.ExpectedResponse expectedSuccessfulTransferResponse()
+        {
+            return new NoContentExpectedResponse();
+        }
+
+        public IntegrationDsl.IntegrationDslApi.ExpectedResponse expectedNotEnoughMoneyInBalanceResponse()
+        {
+            return new JsonExpectedResponse(
+                    422,
+                    new JsonObject()
+                            .put("err", "Not enough money in balance")
+            );
+        }
     }
 
 }
