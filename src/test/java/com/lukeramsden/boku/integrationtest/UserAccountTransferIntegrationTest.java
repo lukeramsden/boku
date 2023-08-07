@@ -8,6 +8,10 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class UserAccountTransferIntegrationTest
 {
+    static final String USER_1 = "user1";
+    static final String USER_2 = "user2";
+    static final String USER_DOES_NOT_EXIST = "userDoesNotExist";
+
     @RegisterExtension
     IntegrationDsl dsl = IntegrationDsl.newDsl();
     UserAccountFixtures fixtures = new UserAccountFixtures();
@@ -15,49 +19,49 @@ public class UserAccountTransferIntegrationTest
     @BeforeEach
     void setInitialUserBalances()
     {
-        dsl.given().sendsRequest(fixtures.admin().setsUserBalanceTo("user1", 100));
+        dsl.given().sendsRequest(fixtures.admin().setsUserBalanceTo(USER_1, 100));
         dsl.and().receivesResponse(fixtures.admin().expectedUserBalanceSetSuccessfullyResponse());
-        dsl.and().sendsRequest(fixtures.admin().setsUserBalanceTo("user2", 200));
+        dsl.and().sendsRequest(fixtures.admin().setsUserBalanceTo(USER_2, 200));
         dsl.and().receivesResponse(fixtures.admin().expectedUserBalanceSetSuccessfullyResponse());
     }
 
     @Test
     void shouldBeAbleToTransferAllMoniesFromOneUserToAnother()
     {
-        dsl.when().sendsRequest(fixtures.user("user1").sendsMoneyTo("user2", 100));
-        dsl.then().receivesResponse(fixtures.user("user1").expectedSuccessfulTransferResponse());
+        dsl.when().sendsRequest(fixtures.user(USER_1).sendsMoneyTo(USER_2, 100));
+        dsl.then().receivesResponse(fixtures.user(USER_1).expectedSuccessfulTransferResponse());
 
-        dsl.when().sendsRequest(fixtures.user("user1").queriesBalance());
-        dsl.then().receivesResponse(fixtures.user("user1").expectedBalanceQueryResponse(0));
+        dsl.when().sendsRequest(fixtures.user(USER_1).queriesBalance());
+        dsl.then().receivesResponse(fixtures.user(USER_1).expectedBalanceQueryResponse(0));
 
-        dsl.when().sendsRequest(fixtures.user("user2").queriesBalance());
-        dsl.then().receivesResponse(fixtures.user("user2").expectedBalanceQueryResponse(300));
+        dsl.when().sendsRequest(fixtures.user(USER_2).queriesBalance());
+        dsl.then().receivesResponse(fixtures.user(USER_2).expectedBalanceQueryResponse(300));
     }
 
     @Test
     void shouldNotBeAbleToSendMoreMoneyThanHasInBalance()
     {
-        dsl.when().sendsRequest(fixtures.user("user1").sendsMoneyTo("user2", 101));
-        dsl.then().receivesResponse(fixtures.user("user1").expectedNotEnoughMoneyInBalanceResponse());
+        dsl.when().sendsRequest(fixtures.user(USER_1).sendsMoneyTo(USER_2, 101));
+        dsl.then().receivesResponse(fixtures.user(USER_1).expectedNotEnoughMoneyInBalanceResponse());
 
-        dsl.when().sendsRequest(fixtures.user("user1").queriesBalance());
-        dsl.then().receivesResponse(fixtures.user("user1").expectedBalanceQueryResponse(100));
+        dsl.when().sendsRequest(fixtures.user(USER_1).queriesBalance());
+        dsl.then().receivesResponse(fixtures.user(USER_1).expectedBalanceQueryResponse(100));
 
-        dsl.when().sendsRequest(fixtures.user("user2").queriesBalance());
-        dsl.then().receivesResponse(fixtures.user("user2").expectedBalanceQueryResponse(200));
+        dsl.when().sendsRequest(fixtures.user(USER_2).queriesBalance());
+        dsl.then().receivesResponse(fixtures.user(USER_2).expectedBalanceQueryResponse(200));
     }
 
     @Test
     void shouldRejectRequestWhenFromUserDoesNotExist()
     {
-        dsl.when().sendsRequest(fixtures.user("userDoesNotExist").sendsMoneyTo("user2", 10));
-        dsl.then().receivesResponse(fixtures.user("userDoesNotExist").expectedUserNotFoundResponse());
+        dsl.when().sendsRequest(fixtures.user(USER_DOES_NOT_EXIST).sendsMoneyTo(USER_2, 10));
+        dsl.then().receivesResponse(fixtures.user(USER_DOES_NOT_EXIST).expectedUserNotFoundResponse());
     }
 
     @Test
     void shouldRejectRequestWhenToUserDoesNotExist()
     {
-        dsl.when().sendsRequest(fixtures.user("user1").sendsMoneyTo("userDoesNotExist", 10));
-        dsl.then().receivesResponse(fixtures.user("userDoesNotExist").expectedUserNotFoundResponse());
+        dsl.when().sendsRequest(fixtures.user(USER_1).sendsMoneyTo(USER_DOES_NOT_EXIST, 10));
+        dsl.then().receivesResponse(fixtures.user(USER_DOES_NOT_EXIST).expectedUserNotFoundResponse());
     }
 }

@@ -177,8 +177,8 @@ class HttpApiServiceVerticle extends AbstractVerticle
                                                     404, err -> "User not found: '%s'".formatted(err.username())
                                             ),
                                             matchError(
-                                                    AccountStoreServiceException.BalanceCannotBeBelowZeroException.class,
-                                                    400, "Cannot set field 'balance' to a value below zero"
+                                                    AccountStoreServiceException.AmountCannotBeBelowZeroException.class,
+                                                    400, "Cannot set field 'amount' to a value below zero"
                                             ),
                                             matchError(
                                                     AccountStoreServiceException.InsufficientBalanceException.class,

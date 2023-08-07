@@ -43,34 +43,34 @@ public class UserAccountFixtures
             );
         }
 
-        public IntegrationDsl.IntegrationDslApi.RequestToSend invalidSetUserBalanceRequestMissingBalance()
+        public IntegrationDsl.IntegrationDslApi.RequestToSend invalidSetUserBalanceRequestMissingBalance(final String userThatExists)
         {
             return new JsonRequestToSend(
                     "POST",
                     "/admin/setUserBalance",
                     new JsonObject()
-                            .put("username", "user1")
+                            .put("username", userThatExists)
             );
         }
 
-        public IntegrationDsl.IntegrationDslApi.RequestToSend invalidSetUserBalanceRequestBalanceBelowZero()
+        public IntegrationDsl.IntegrationDslApi.RequestToSend invalidSetUserBalanceRequestBalanceBelowZero(final String userThatExists)
         {
             return new JsonRequestToSend(
                     "POST",
                     "/admin/setUserBalance",
                     new JsonObject()
-                            .put("username", "user1")
+                            .put("username", userThatExists)
                             .put("balance", String.valueOf(-1))
             );
         }
 
-        public IntegrationDsl.IntegrationDslApi.RequestToSend invalidSetUserBalanceRequestBalanceNaN()
+        public IntegrationDsl.IntegrationDslApi.RequestToSend invalidSetUserBalanceRequestBalanceNaN(final String userThatExists)
         {
             return new JsonRequestToSend(
                     "POST",
                     "/admin/setUserBalance",
                     new JsonObject()
-                            .put("username", "user1")
+                            .put("username", userThatExists)
                             .put("balance", "abc")
             );
         }
@@ -131,6 +131,52 @@ public class UserAccountFixtures
                     422,
                     new JsonObject()
                             .put("err", "User does not have sufficient balance for this transfer")
+            );
+        }
+
+        public IntegrationDsl.IntegrationDslApi.RequestToSend invalidTransferMissingFrom(final String userThatExists)
+        {
+            return new JsonRequestToSend(
+                    "POST",
+                    "/transfer",
+                    new JsonObject()
+                            .put("to", userThatExists)
+                            .put("amount", String.valueOf(10))
+            );
+        }
+
+        public IntegrationDsl.IntegrationDslApi.RequestToSend invalidTransferMissingTo()
+        {
+            return new JsonRequestToSend(
+                    "POST",
+                    "/transfer",
+                    new JsonObject()
+                            .put("from", username)
+                            .put("amount", String.valueOf(10))
+            );
+        }
+
+        public IntegrationDsl.IntegrationDslApi.RequestToSend invalidTransferAmountBelowZero(final String userThatExists)
+        {
+            return new JsonRequestToSend(
+                    "POST",
+                    "/transfer",
+                    new JsonObject()
+                            .put("from", username)
+                            .put("to", userThatExists)
+                            .put("amount", String.valueOf(-1))
+            );
+        }
+
+        public IntegrationDsl.IntegrationDslApi.RequestToSend invalidTransferAmountNaN(final String userThatExists)
+        {
+            return new JsonRequestToSend(
+                    "POST",
+                    "/transfer",
+                    new JsonObject()
+                            .put("from", username)
+                            .put("to", userThatExists)
+                            .put("amount", "abc")
             );
         }
     }

@@ -8,6 +8,10 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class UserAccountBalanceIntegrationTest
 {
+    static final String USER_1 = "user1";
+    static final String USER_2 = "user2";
+    static final String USER_DOES_NOT_EXIST = "userDoesNotExist";
+
     @RegisterExtension
     IntegrationDsl dsl = IntegrationDsl.newDsl();
     UserAccountFixtures fixtures = new UserAccountFixtures();
@@ -15,26 +19,26 @@ public class UserAccountBalanceIntegrationTest
     @BeforeEach
     void setInitialUserBalances()
     {
-        dsl.given().sendsRequest(fixtures.admin().setsUserBalanceTo("user1", 100));
+        dsl.given().sendsRequest(fixtures.admin().setsUserBalanceTo(USER_1, 100));
         dsl.and().receivesResponse(fixtures.admin().expectedUserBalanceSetSuccessfullyResponse());
-        dsl.and().sendsRequest(fixtures.admin().setsUserBalanceTo("user2", 200));
+        dsl.and().sendsRequest(fixtures.admin().setsUserBalanceTo(USER_2, 200));
         dsl.and().receivesResponse(fixtures.admin().expectedUserBalanceSetSuccessfullyResponse());
     }
 
     @Test
     void shouldBeAbleToQueryUserBalance()
     {
-        dsl.when().sendsRequest(fixtures.user("user1").queriesBalance());
-        dsl.then().receivesResponse(fixtures.user("user1").expectedBalanceQueryResponse(100));
+        dsl.when().sendsRequest(fixtures.user(USER_1).queriesBalance());
+        dsl.then().receivesResponse(fixtures.user(USER_1).expectedBalanceQueryResponse(100));
 
-        dsl.when().sendsRequest(fixtures.user("user2").queriesBalance());
-        dsl.then().receivesResponse(fixtures.user("user2").expectedBalanceQueryResponse(200));
+        dsl.when().sendsRequest(fixtures.user(USER_2).queriesBalance());
+        dsl.then().receivesResponse(fixtures.user(USER_2).expectedBalanceQueryResponse(200));
     }
 
     @Test
     void shouldReturnErrorForNonExistentUser()
     {
-        dsl.when().sendsRequest(fixtures.user("userDoesNotExist!!").queriesBalance());
-        dsl.then().receivesResponse(fixtures.user("userDoesNotExist!!").expectedUserNotFoundResponse());
+        dsl.when().sendsRequest(fixtures.user(USER_DOES_NOT_EXIST).queriesBalance());
+        dsl.then().receivesResponse(fixtures.user(USER_DOES_NOT_EXIST).expectedUserNotFoundResponse());
     }
 }

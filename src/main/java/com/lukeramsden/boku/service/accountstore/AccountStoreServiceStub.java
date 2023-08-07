@@ -70,7 +70,7 @@ class AccountStoreServiceStub extends AgentService implements AccountStoreServic
 
             if (amountToTransfer.compareTo(BigDecimal.ZERO) < 0)
             {
-                throw new AccountStoreServiceException.BalanceCannotBeBelowZeroException();
+                throw new AccountStoreServiceException.AmountCannotBeBelowZeroException();
             }
 
             final BigDecimal fromBalance = userBalances.get(from);
