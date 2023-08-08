@@ -10,7 +10,7 @@ public class UserAccountBalanceIntegrationTest
 {
     static final String USER_1 = "user1";
     static final String USER_2 = "user2";
-    static final String USER_DOES_NOT_EXIST = "userDoesNotExist";
+    static final String NON_EXISTENT_USER = "nonExistentUser";
 
     @RegisterExtension
     IntegrationDsl dsl = IntegrationDsl.newDsl();
@@ -38,7 +38,7 @@ public class UserAccountBalanceIntegrationTest
     @Test
     void shouldReturnErrorForNonExistentUser()
     {
-        dsl.when().sendsRequest(fixtures.user(USER_DOES_NOT_EXIST).queriesBalance());
-        dsl.then().receivesResponse(fixtures.user(USER_DOES_NOT_EXIST).expectedUserNotFoundResponse());
+        dsl.when().sendsRequest(fixtures.user(NON_EXISTENT_USER).queriesBalance());
+        dsl.then().receivesResponse(fixtures.user(NON_EXISTENT_USER).expectedUserNotFoundResponse());
     }
 }

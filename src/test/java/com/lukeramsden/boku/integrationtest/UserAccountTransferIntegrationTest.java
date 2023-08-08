@@ -10,7 +10,7 @@ public class UserAccountTransferIntegrationTest
 {
     static final String USER_1 = "user1";
     static final String USER_2 = "user2";
-    static final String USER_DOES_NOT_EXIST = "userDoesNotExist";
+    static final String NON_EXISTENT_USER = "nonExistentUser";
 
     @RegisterExtension
     IntegrationDsl dsl = IntegrationDsl.newDsl();
@@ -54,14 +54,14 @@ public class UserAccountTransferIntegrationTest
     @Test
     void shouldRejectRequestWhenFromUserDoesNotExist()
     {
-        dsl.when().sendsRequest(fixtures.user(USER_DOES_NOT_EXIST).sendsMoneyTo(USER_2, 10));
-        dsl.then().receivesResponse(fixtures.user(USER_DOES_NOT_EXIST).expectedUserNotFoundResponse());
+        dsl.when().sendsRequest(fixtures.user(NON_EXISTENT_USER).sendsMoneyTo(USER_2, 10));
+        dsl.then().receivesResponse(fixtures.user(NON_EXISTENT_USER).expectedUserNotFoundResponse());
     }
 
     @Test
     void shouldRejectRequestWhenToUserDoesNotExist()
     {
-        dsl.when().sendsRequest(fixtures.user(USER_1).sendsMoneyTo(USER_DOES_NOT_EXIST, 10));
-        dsl.then().receivesResponse(fixtures.user(USER_DOES_NOT_EXIST).expectedUserNotFoundResponse());
+        dsl.when().sendsRequest(fixtures.user(USER_1).sendsMoneyTo(NON_EXISTENT_USER, 10));
+        dsl.then().receivesResponse(fixtures.user(NON_EXISTENT_USER).expectedUserNotFoundResponse());
     }
 }
