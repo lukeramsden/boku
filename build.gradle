@@ -26,6 +26,7 @@ dependencies {
 
     testImplementation("io.vertx:vertx-junit5")
     testImplementation("org.assertj:assertj-core:3.24.2")
+    testImplementation("org.awaitility:awaitility:4.2.0")
     testImplementation("org.junit.jupiter:junit-jupiter:$junitJupiterVersion")
 }
 

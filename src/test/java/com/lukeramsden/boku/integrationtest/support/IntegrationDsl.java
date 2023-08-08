@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Consumer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -79,6 +80,8 @@ public final class IntegrationDsl implements BeforeEachCallback, AfterEachCallba
 
         void receivesResponse(ExpectedResponse expectedResponse);
 
+        void matchesOnLastResponse(Consumer<HttpResponse<String>> matcher);
+
         interface RequestToSend
         {
             String method();
@@ -94,9 +97,9 @@ public final class IntegrationDsl implements BeforeEachCallback, AfterEachCallba
         {
             int expectedStatusCode();
 
-            String expectedBody();
-
             Map<String, List<String>> expectedHeaders();
+
+            void assertResponseBodyMatchesExpectedBody(SoftAssertions softAssertions, String responseBody);
         }
     }
 
@@ -184,10 +187,9 @@ public final class IntegrationDsl implements BeforeEachCallback, AfterEachCallba
             try
             {
                 final HttpResponse<String> nextResponse = responses.get(responseAssertionWatermark);
+                responseAssertionWatermark++;
 
                 assertThatResponseIsEqual(softAssertions, nextResponse, expectedResponse);
-
-                responseAssertionWatermark++;
             } catch (final IndexOutOfBoundsException ignored)
             {
                 softAssertions.assertThat(false).withFailMessage("No more responses").isTrue();
@@ -196,22 +198,22 @@ public final class IntegrationDsl implements BeforeEachCallback, AfterEachCallba
             softAssertions.assertAll();
         }
 
+        @Override
+        public void matchesOnLastResponse(Consumer<HttpResponse<String>> matcher)
+        {
+            matcher.accept(responses.get(responses.size() - 1));
+        }
+
         private static void assertThatResponseIsEqual(SoftAssertions softAssertions, HttpResponse<String> nextResponse, ExpectedResponse expectedResponse)
         {
             softAssertions.assertThat(nextResponse.statusCode()).isEqualTo(expectedResponse.expectedStatusCode());
-
-            if (expectedResponse.expectedBody() == null)
-            {
-                softAssertions.assertThat(nextResponse.body()).isEmpty();
-            } else
-            {
-                softAssertions.assertThat(nextResponse.body()).isEqualTo(expectedResponse.expectedBody());
-            }
 
             final Map<String, List<String>> headers = new HashMap<>(nextResponse.headers().map());
             headers.remove(":status"); // don't assert on this header
             headers.remove("content-length"); // don't assert on this header
             softAssertions.assertThat(headers).usingRecursiveAssertion().isEqualTo(expectedResponse.expectedHeaders());
+
+            expectedResponse.assertResponseBodyMatchesExpectedBody(softAssertions, nextResponse.body());
         }
     }
 }
