@@ -1,5 +1,6 @@
 package com.lukeramsden.boku.integrationtest.support;
 
+import com.lukeramsden.boku.infrastructure.clock.SystemEpochClock;
 import com.lukeramsden.boku.infrastructure.vertx.VertxLifecycle;
 import com.lukeramsden.boku.service.accountstore.AccountStoreServiceStubLifecycle;
 import com.lukeramsden.boku.service.httpapi.HttpApiServiceLifecycle;
@@ -125,7 +126,7 @@ public final class IntegrationDsl implements BeforeEachCallback, AfterEachCallba
                 // need to worry about creating any threads here
                 this.vertx = VertxLifecycle.launch();
                 this.withdrawalService = WithdrawalServiceStubLifecycle.launch();
-                this.accountStoreService = AccountStoreServiceStubLifecycle.launch(withdrawalService.service());
+                this.accountStoreService = AccountStoreServiceStubLifecycle.launch(new SystemEpochClock(), withdrawalService.service());
                 this.httpApiService = HttpApiServiceLifecycle.launch(
                         vertx.vertx(),
                         accountStoreService.service()

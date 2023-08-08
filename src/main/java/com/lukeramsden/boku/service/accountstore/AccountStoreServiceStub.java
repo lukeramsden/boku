@@ -1,6 +1,7 @@
 package com.lukeramsden.boku.service.accountstore;
 
 import com.lukeramsden.boku.infrastructure.agentservice.AgentService;
+import com.lukeramsden.boku.infrastructure.clock.EpochClock;
 import com.lukeramsden.boku.service.withdrawal.WithdrawalService;
 import io.vertx.core.Future;
 import org.agrona.collections.Hashing;
@@ -8,6 +9,9 @@ import org.agrona.collections.Object2ObjectHashMap;
 import org.agrona.collections.ObjectHashSet;
 
 import java.math.BigDecimal;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -24,24 +28,29 @@ import java.util.UUID;
  */
 class AccountStoreServiceStub extends AgentService implements AccountStoreService
 {
+    private static final Duration WITHDRAWAL_STATE_POLL_INTERVAL = Duration.ofMillis(500);
     private final WithdrawalService withdrawalService;
 
-    private final Map<String, ActiveWithdrawal> activeWithdrawals;
     private final Map<String, BigDecimal> userBalances;
+    private final Map<String, WithdrawalDetail> withdrawals;
+    private final List<String> activeWithdrawals;
 
-    public AccountStoreServiceStub(WithdrawalService withdrawalService)
+    public AccountStoreServiceStub(EpochClock clock, WithdrawalService withdrawalService)
     {
+        super(clock);
         this.withdrawalService = withdrawalService;
         this.userBalances = new Object2ObjectHashMap<>(
                 ObjectHashSet.DEFAULT_INITIAL_CAPACITY,
                 Hashing.DEFAULT_LOAD_FACTOR,
                 true
         );
-        this.activeWithdrawals = new Object2ObjectHashMap<>(
+        this.withdrawals = new Object2ObjectHashMap<>(
                 ObjectHashSet.DEFAULT_INITIAL_CAPACITY,
                 Hashing.DEFAULT_LOAD_FACTOR,
                 true
         );
+        this.activeWithdrawals = new ArrayList<>();
+        scheduleTaskIn(this::pollWithdrawalStates, WITHDRAWAL_STATE_POLL_INTERVAL);
     }
 
     @Override
@@ -121,7 +130,7 @@ class AccountStoreServiceStub extends AgentService implements AccountStoreServic
     {
         return task(() ->
         {
-            if (activeWithdrawals.containsKey(withdrawalId))
+            if (withdrawals.containsKey(withdrawalId))
             {
                 throw new AccountStoreServiceException.WithdrawalAlreadyBeingProcessedException();
             }
@@ -154,12 +163,14 @@ class AccountStoreServiceStub extends AgentService implements AccountStoreServic
             // there's no possible avenue or need for error handling if it fails
             // so we won't
 
-            final ActiveWithdrawal activeWithdrawal = new ActiveWithdrawal(
+            final WithdrawalDetail withdrawalDetail = new WithdrawalDetail(
                     withdrawalId,
-                    withdrawalRequestId
+                    withdrawalRequestId,
+                    WithdrawalState.PROCESSING
             );
 
-            activeWithdrawals.put(withdrawalId, activeWithdrawal);
+            withdrawals.put(withdrawalId, withdrawalDetail);
+            activeWithdrawals.add(withdrawalId);
 
             // subtract pending balance - NOTE: should we track separately?
             userBalances.put(from, fromBalance.subtract(amountToWithdraw));
@@ -173,14 +184,69 @@ class AccountStoreServiceStub extends AgentService implements AccountStoreServic
     {
         return task(() ->
         {
-            throw new UnsupportedOperationException();
+            if (!withdrawals.containsKey(withdrawalId))
+            {
+                throw new AccountStoreServiceException.WithdrawalDoesNotExistException();
+            }
+
+            return withdrawals.get(withdrawalId).state;
         });
     }
 
-    private record ActiveWithdrawal(
+    private void pollWithdrawalStates()
+    {
+        final List<String> withdrawalsToRemove = new ArrayList<>();
+
+        for (final String withdrawalId : activeWithdrawals)
+        {
+            final WithdrawalDetail withdrawalDetail = withdrawals.get(withdrawalId);
+
+            final WithdrawalService.WithdrawalState latestRequestState = withdrawalService.getRequestState(
+                    withdrawalDetail.withdrawalRequestId()
+            );
+
+            switch (latestRequestState)
+            {
+                case PROCESSING ->
+                {
+                }
+                case COMPLETED ->
+                {
+                    withdrawalsToRemove.add(withdrawalId);
+                    withdrawals.put(
+                            withdrawalId,
+                            withdrawalDetail.withUpdatedState(WithdrawalState.COMPLETED)
+                    );
+                }
+                case FAILED ->
+                {
+                    withdrawalsToRemove.add(withdrawalId);
+                    withdrawals.put(
+                            withdrawalId,
+                            withdrawalDetail.withUpdatedState(WithdrawalState.FAILED)
+                    );
+                }
+            }
+        }
+
+        for (String withdrawalId : withdrawalsToRemove)
+        {
+            activeWithdrawals.remove(withdrawalId);
+        }
+
+        // Repeat again
+        scheduleTaskIn(this::pollWithdrawalStates, WITHDRAWAL_STATE_POLL_INTERVAL);
+    }
+
+    private record WithdrawalDetail(
             String withdrawalId,
-            WithdrawalService.WithdrawalId withdrawalRequestId
+            WithdrawalService.WithdrawalId withdrawalRequestId,
+            WithdrawalState state
     )
     {
+        WithdrawalDetail withUpdatedState(WithdrawalState newState)
+        {
+            return new WithdrawalDetail(withdrawalId, withdrawalRequestId, newState);
+        }
     }
 }
