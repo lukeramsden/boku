@@ -118,6 +118,8 @@ public final class IntegrationDsl implements BeforeEachCallback, AfterEachCallba
 
             try
             {
+                // VertX and Stub services spin up their own threads, so we don't
+                // need to worry about creating any threads here
                 this.vertx = VertxLifecycle.launch();
                 this.withdrawalService = WithdrawalServiceStubLifecycle.launch();
                 this.accountStoreService = AccountStoreServiceStubLifecycle.launch();
