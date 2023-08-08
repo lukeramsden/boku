@@ -4,6 +4,7 @@ import com.lukeramsden.boku.service.accountstore.AccountStoreService;
 import com.lukeramsden.boku.service.accountstore.AccountStoreServiceException;
 import com.lukeramsden.boku.service.withdrawal.WithdrawalService;
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import org.apache.logging.log4j.LogManager;
@@ -61,8 +62,7 @@ class HttpApiServiceVerticle extends AbstractVerticle
         {
             final String username = context.pathParam("username");
 
-            accountStoreService
-                    .getUserBalance(username)
+            wrapInRequestContext(accountStoreService.getUserBalance(username))
                     .onSuccess(balance ->
                     {
                         context.response().setStatusCode(200);
@@ -112,8 +112,7 @@ class HttpApiServiceVerticle extends AbstractVerticle
                                 return;
                             }
 
-                            accountStoreService
-                                    .adminSetUserBalance(body.getString("username"), balance)
+                            wrapInRequestContext(accountStoreService.adminSetUserBalance(body.getString("username"), balance))
                                     .onSuccess(noContentResponse(context))
                                     .onFailure(errorMatcher(
                                             context,
@@ -163,8 +162,7 @@ class HttpApiServiceVerticle extends AbstractVerticle
                                 return;
                             }
 
-                            accountStoreService
-                                    .transferAmountFromTo(body.getString("from"), body.getString("to"), amount)
+                            wrapInRequestContext(accountStoreService.transferAmountFromTo(body.getString("from"), body.getString("to"), amount))
                                     .onSuccess(noContentResponse(context))
                                     .onFailure(errorMatcher(
                                             context, "Error while performing transfer",
@@ -187,5 +185,18 @@ class HttpApiServiceVerticle extends AbstractVerticle
                                     ));
                         })
                 ).failureHandler(internalServerError());
+    }
+
+    // Ensures that callbacks are run on correct VertX context thread
+    // for sending responses
+    // To be honest - really should just instantiate this all in a single verticle for now
+    // rather than communicating over queues
+    private <T> Future<T> wrapInRequestContext(Future<T> futureToWrap)
+    {
+        return Future.future(newFuture ->
+        {
+            futureToWrap.onSuccess(val -> context.runOnContext(__ -> newFuture.tryComplete(val)));
+            futureToWrap.onFailure(throwable -> context.runOnContext(__ -> newFuture.tryFail(throwable)));
+        });
     }
 }
