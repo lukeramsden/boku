@@ -5,6 +5,7 @@ import io.vertx.core.json.JsonObject;
 import org.assertj.core.api.SoftAssertions;
 
 import java.net.http.HttpResponse;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -257,7 +258,10 @@ public class UserAccountFixtures
             return stringHttpResponse ->
             {
                 assertThat(stringHttpResponse.statusCode()).isEqualTo(200);
-                assertThat(stringHttpResponse.headers().map()).isEqualTo(Map.of("content-type", List.of("application/json")));
+                final Map<String, List<String>> headers = new HashMap<>(stringHttpResponse.headers().map());
+                headers.remove(":status");
+                headers.remove("content-length");
+                assertThat(headers).isEqualTo(Map.of("content-type", List.of("application/json")));
                 JsonObject parsedBody = new JsonObject(stringHttpResponse.body());
                 assertThat(parsedBody.getString("withdrawalId")).isEqualTo(withdrawalId);
                 if (parsedBody.getString("status").equals("completed"))

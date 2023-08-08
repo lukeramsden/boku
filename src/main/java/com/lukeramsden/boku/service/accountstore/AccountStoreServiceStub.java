@@ -165,7 +165,9 @@ class AccountStoreServiceStub extends AgentService implements AccountStoreServic
 
             final WithdrawalDetail withdrawalDetail = new WithdrawalDetail(
                     withdrawalId,
+                    from,
                     withdrawalRequestId,
+                    amountToWithdraw,
                     WithdrawalState.PROCESSING
             );
 
@@ -186,7 +188,7 @@ class AccountStoreServiceStub extends AgentService implements AccountStoreServic
         {
             if (!withdrawals.containsKey(withdrawalId))
             {
-                throw new AccountStoreServiceException.WithdrawalDoesNotExistException();
+                throw new AccountStoreServiceException.WithdrawalDoesNotExistException(withdrawalId);
             }
 
             return withdrawals.get(withdrawalId).state;
@@ -225,6 +227,8 @@ class AccountStoreServiceStub extends AgentService implements AccountStoreServic
                             withdrawalId,
                             withdrawalDetail.withUpdatedState(WithdrawalState.FAILED)
                     );
+                    final BigDecimal initiatorBalance = userBalances.get(withdrawalDetail.withdrawalInitiator);
+                    userBalances.put(withdrawalDetail.withdrawalInitiator, initiatorBalance.add(withdrawalDetail.withdrawalAmount));
                 }
             }
         }
@@ -240,13 +244,21 @@ class AccountStoreServiceStub extends AgentService implements AccountStoreServic
 
     private record WithdrawalDetail(
             String withdrawalId,
+            String withdrawalInitiator,
             WithdrawalService.WithdrawalId withdrawalRequestId,
+            BigDecimal withdrawalAmount,
             WithdrawalState state
     )
     {
         WithdrawalDetail withUpdatedState(WithdrawalState newState)
         {
-            return new WithdrawalDetail(withdrawalId, withdrawalRequestId, newState);
+            return new WithdrawalDetail(
+                    withdrawalId,
+                    withdrawalInitiator,
+                    withdrawalRequestId,
+                    withdrawalAmount,
+                    newState
+            );
         }
     }
 }

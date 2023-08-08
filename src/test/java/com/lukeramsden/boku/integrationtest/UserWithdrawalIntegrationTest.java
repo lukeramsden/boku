@@ -3,6 +3,7 @@ package com.lukeramsden.boku.integrationtest;
 import com.lukeramsden.boku.integrationtest.fixtures.UserAccountFixtures;
 import com.lukeramsden.boku.integrationtest.support.IntegrationDsl;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -27,7 +28,8 @@ public class UserWithdrawalIntegrationTest
         dsl.and().receivesResponse(fixtures.admin().expectedUserBalanceSetSuccessfullyResponse());
     }
 
-    @Test
+    // repeat test 10 times due to non-determinism
+    @RepeatedTest(10)
     void shouldBeAbleToWithdraw()
     {
         dsl.when().sendsRequest(user1.withdrawsTo(WITHDRAWAL_ID, WITHDRAWAL_ADDRESS, 100));
@@ -35,7 +37,7 @@ public class UserWithdrawalIntegrationTest
 
         dsl.when().sendsRequest(user1.queriesBalance());
         // for now balance includes pending withdrawals subtracted
-        // it may make sense in future
+        // it may make sense in future to separate it out in the API
         dsl.then().receivesResponse(user1.expectedBalanceQueryResponse(0));
 
         await().atMost(15, SECONDS)

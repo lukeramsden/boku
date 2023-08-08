@@ -50,7 +50,26 @@ public sealed abstract class AccountStoreServiceException
 
     public static final class WithdrawalDoesNotExistException extends AccountStoreServiceException
     {
+        private final String withdrawalId;
 
+        public WithdrawalDoesNotExistException(String withdrawalId)
+        {
+            super();
+            this.withdrawalId = withdrawalId;
+        }
+
+        public String withdrawalId()
+        {
+            return withdrawalId;
+        }
+
+        @Override
+        public String toString()
+        {
+            return "WithdrawalDoesNotExistException{" +
+                    "withdrawalId='" + withdrawalId + '\'' +
+                    '}';
+        }
     }
 
     public static final class WithdrawalAlreadyBeingProcessedException extends AccountStoreServiceException

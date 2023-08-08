@@ -268,7 +268,34 @@ class HttpApiServiceVerticle extends AbstractVerticle
 
     private void checkWithdrawalStatusHandler(RoutingContext context)
     {
-        throw new UnsupportedOperationException();
+        final String withdrawalId = context.pathParam("withdrawalId");
+
+        wrapInRequestContext(accountStoreService.checkWithdrawalStatus(withdrawalId))
+                .onSuccess(state ->
+                {
+                    context.response().setStatusCode(200);
+                    context.json(
+                            new JsonObject()
+                                    .put("withdrawalId", withdrawalId)
+                                    .put("status", switch (state)
+                                    {
+                                        case PROCESSING -> "processing";
+                                        case COMPLETED -> "completed";
+                                        case FAILED -> "failed";
+                                    })
+                    );
+                })
+                .onFailure(errorMatcher(
+                        context, "Error while retrieving withdrawal status",
+                        matchError(
+                                // there are many arguments to be had
+                                // about how to return errors for missing entities
+                                // / resources
+                                // that argument is out of scope of this take-home task
+                                AccountStoreServiceException.WithdrawalDoesNotExistException.class,
+                                404, err -> "Withdrawal not found: '%s'".formatted(err.withdrawalId())
+                        )
+                ));
     }
 
     // Ensures that callbacks are run on correct VertX context thread
