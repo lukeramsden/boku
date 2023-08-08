@@ -5,7 +5,8 @@ public sealed abstract class AccountStoreServiceException
         permits AccountStoreServiceException.UserDoesNotExistException,
         AccountStoreServiceException.BalanceCannotBeBelowZeroException,
         AccountStoreServiceException.AmountCannotBeBelowZeroException,
-        AccountStoreServiceException.InsufficientBalanceException
+        AccountStoreServiceException.InsufficientBalanceException,
+        AccountStoreServiceException.WithdrawalAlreadyBeingProcessedException
 {
     public static final class UserDoesNotExistException extends AccountStoreServiceException
     {
@@ -42,6 +43,11 @@ public sealed abstract class AccountStoreServiceException
     }
 
     public static final class InsufficientBalanceException extends AccountStoreServiceException
+    {
+
+    }
+
+    public static final class WithdrawalAlreadyBeingProcessedException extends AccountStoreServiceException
     {
 
     }

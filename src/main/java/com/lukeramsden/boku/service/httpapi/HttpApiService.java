@@ -1,7 +1,6 @@
 package com.lukeramsden.boku.service.httpapi;
 
 import com.lukeramsden.boku.service.accountstore.AccountStoreService;
-import com.lukeramsden.boku.service.withdrawal.WithdrawalService;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Vertx;
 
@@ -14,9 +13,9 @@ class HttpApiService extends AbstractVerticle
 {
     private final HttpApiServiceVerticle verticle;
 
-    public HttpApiService(Vertx vertx, WithdrawalService withdrawalService, AccountStoreService accountStoreService)
+    public HttpApiService(Vertx vertx, AccountStoreService accountStoreService)
     {
-        this.verticle = new HttpApiServiceVerticle(accountStoreService, withdrawalService);
+        this.verticle = new HttpApiServiceVerticle(accountStoreService);
 
         deployVerticle(vertx);
     }

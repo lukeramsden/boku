@@ -17,10 +17,11 @@ public final class ServiceContainer
         try (
                 var vertx = VertxLifecycle.launch();
                 var withdrawalService = WithdrawalServiceStubLifecycle.launch();
-                var accountStoreService = AccountStoreServiceStubLifecycle.launch();
+                var accountStoreService = AccountStoreServiceStubLifecycle.launch(
+                        withdrawalService.service()
+                );
                 var httpApiService = HttpApiServiceLifecycle.launch(
                         vertx.vertx(),
-                        withdrawalService.service(),
                         accountStoreService.service()
                 )
         )

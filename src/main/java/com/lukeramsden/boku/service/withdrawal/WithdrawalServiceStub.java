@@ -15,8 +15,11 @@ class WithdrawalServiceStub implements WithdrawalService
     public void requestWithdrawal(WithdrawalId id, Address address, Amount amount)
     {
         final var existing = requests.putIfAbsent(id, new Withdrawal(finalState(), finaliseAt(), address, amount));
+
         if (existing != null && !Objects.equals(existing.address, address) && !Objects.equals(existing.amount, amount))
+        {
             throw new IllegalStateException("Withdrawal request with id[%s] is already present".formatted(id));
+        }
     }
 
     private WithdrawalState finalState()
@@ -33,7 +36,12 @@ class WithdrawalServiceStub implements WithdrawalService
     public WithdrawalState getRequestState(WithdrawalId id)
     {
         final var request = requests.get(id);
-        if (request == null) throw new IllegalArgumentException("Request %s is not found".formatted(id));
+
+        if (request == null)
+        {
+            throw new IllegalArgumentException("Request %s is not found".formatted(id));
+        }
+
         return request.finalState();
     }
 

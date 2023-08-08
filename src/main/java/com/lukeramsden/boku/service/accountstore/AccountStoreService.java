@@ -12,4 +12,13 @@ public interface AccountStoreService
     Future<BigDecimal> getUserBalance(String username);
 
     Future<Void> transferAmountFromTo(String from, String to, BigDecimal amountToTransfer);
+
+    Future<Void> initiateWithdrawalToAddress(String withdrawalId, String from, String toAddress, BigDecimal amountToWithdraw);
+
+    Future<WithdrawalState> checkWithdrawalStatus(String withdrawalId);
+
+    enum WithdrawalState
+    {
+        PROCESSING, COMPLETED, FAILED
+    }
 }

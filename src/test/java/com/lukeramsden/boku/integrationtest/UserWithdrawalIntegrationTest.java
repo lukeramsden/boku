@@ -33,6 +33,11 @@ public class UserWithdrawalIntegrationTest
         dsl.when().sendsRequest(user1.withdrawsTo(WITHDRAWAL_ID, WITHDRAWAL_ADDRESS, 100));
         dsl.then().receivesResponse(user1.expectedSuccessfulWithdrawalInitiatedResponse(WITHDRAWAL_ID));
 
+        dsl.when().sendsRequest(user1.queriesBalance());
+        // for now balance includes pending withdrawals subtracted
+        // it may make sense in future
+        dsl.then().receivesResponse(user1.expectedBalanceQueryResponse(0));
+
         await().atMost(15, SECONDS)
                 .untilAsserted(() ->
                 {

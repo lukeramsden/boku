@@ -204,20 +204,14 @@ public class UserAccountFixtures
 
         public IntegrationDsl.IntegrationDslApi.ExpectedResponse expectedSuccessfulWithdrawalInitiatedResponse(String withdrawalId)
         {
-            return new JsonExpectedResponse(
-                    202,
-                    new JsonObject()
-                            .put("withdrawalId", withdrawalId)
-            );
+            return new NoContentExpectedResponse();
         }
 
         public IntegrationDsl.IntegrationDslApi.RequestToSend checksWithdrawalStatus(String withdrawalId)
         {
-            return new JsonRequestToSend(
+            return new EmptyBodyRequestToSend(
                     "GET",
-                    "/withdrawalStatus",
-                    new JsonObject()
-                            .put("withdrawalId", withdrawalId)
+                    "/withdrawalStatus/%s".formatted(withdrawalId)
             );
         }
 

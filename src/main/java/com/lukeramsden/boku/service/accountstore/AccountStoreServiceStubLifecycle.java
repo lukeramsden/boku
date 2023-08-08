@@ -1,5 +1,6 @@
 package com.lukeramsden.boku.service.accountstore;
 
+import com.lukeramsden.boku.service.withdrawal.WithdrawalService;
 import org.agrona.concurrent.AgentRunner;
 import org.agrona.concurrent.BackoffIdleStrategy;
 import org.apache.logging.log4j.LogManager;
@@ -11,9 +12,9 @@ public class AccountStoreServiceStubLifecycle implements AutoCloseable
     private final AccountStoreServiceStub accountStoreServiceStub;
     private final AgentRunner agentRunner;
 
-    public AccountStoreServiceStubLifecycle()
+    public AccountStoreServiceStubLifecycle(WithdrawalService withdrawalService)
     {
-        this.accountStoreServiceStub = new AccountStoreServiceStub();
+        this.accountStoreServiceStub = new AccountStoreServiceStub(withdrawalService);
         this.agentRunner = new AgentRunner(
                 new BackoffIdleStrategy(),
                 throwable -> LOGGER.error("Error in account store service stub agent", throwable),
@@ -23,9 +24,9 @@ public class AccountStoreServiceStubLifecycle implements AutoCloseable
         AgentRunner.startOnThread(agentRunner);
     }
 
-    public static AccountStoreServiceStubLifecycle launch()
+    public static AccountStoreServiceStubLifecycle launch(WithdrawalService withdrawalService)
     {
-        return new AccountStoreServiceStubLifecycle();
+        return new AccountStoreServiceStubLifecycle(withdrawalService);
     }
 
     @Override

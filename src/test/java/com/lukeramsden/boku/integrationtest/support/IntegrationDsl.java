@@ -125,10 +125,9 @@ public final class IntegrationDsl implements BeforeEachCallback, AfterEachCallba
                 // need to worry about creating any threads here
                 this.vertx = VertxLifecycle.launch();
                 this.withdrawalService = WithdrawalServiceStubLifecycle.launch();
-                this.accountStoreService = AccountStoreServiceStubLifecycle.launch();
+                this.accountStoreService = AccountStoreServiceStubLifecycle.launch(withdrawalService.service());
                 this.httpApiService = HttpApiServiceLifecycle.launch(
                         vertx.vertx(),
-                        withdrawalService.service(),
                         accountStoreService.service()
                 );
                 this.httpClient = HttpClient.newHttpClient();
