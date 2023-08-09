@@ -2,12 +2,14 @@ package com.lukeramsden.boku.integrationtest.support;
 
 import com.lukeramsden.boku.infrastructure.clock.SystemEpochClock;
 import com.lukeramsden.boku.infrastructure.vertx.VertxLifecycle;
+import com.lukeramsden.boku.integrationtest.fixtures.UserAccountFixtures;
 import com.lukeramsden.boku.service.accountstore.AccountStoreServiceStubLifecycle;
 import com.lukeramsden.boku.service.httpapi.HttpApiServiceLifecycle;
 import com.lukeramsden.boku.service.withdrawal.WithdrawalServiceStubLifecycle;
 import org.agrona.CloseHelper;
 import org.agrona.LangUtil;
 import org.assertj.core.api.SoftAssertions;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -28,6 +30,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 public final class IntegrationDsl implements BeforeEachCallback, AfterEachCallback
 {
@@ -136,6 +139,14 @@ public final class IntegrationDsl implements BeforeEachCallback, AfterEachCallba
             {
                 LangUtil.rethrowUnchecked(e);
             }
+
+            await()
+                    .atMost(10, TimeUnit.SECONDS)
+                    .untilAsserted(() ->
+                    {
+                        sendsRequest(new EmptyBodyRequestToSend("GET", "/healthz"));
+                        receivesResponse(new PlainTextExpectedResponse(200, "healthy"));
+                    });
         }
 
         @Override
